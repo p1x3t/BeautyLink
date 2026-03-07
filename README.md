@@ -1,4 +1,4 @@
-# beautylink
+# BeautyLink
 Plataforma Digital de Apoio a Empreendedoras da Estética em Comunidades Periféricas
 
 ## Estrutura do Projeto
