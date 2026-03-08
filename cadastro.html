@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro - BeautyLink</title>
+<style>
+:root {
+--cor-creme-claro: #FDFBF7;
+--cor-creme-medio: #F2EFE5;
+--cor-branco: #FFFFFF;
+--cor-verde-claro: #A8D5BA;
+--cor-verde-hover: #8FC9A3;
+--cor-texto-escuro: #3E4A3D;
+--cor-texto-cinza: #666666;
+--cor-erro: #E74C3C;
+--cor-sucesso: #27AE60;
+--fonte-principal: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+--fonte-titulo: 'Georgia', serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+font-family: var(--fonte-principal);
+background-color: var(--cor-creme-claro);
+color: var(--cor-texto-escuro);
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+}
+header {
+background-color: var(--cor-branco);
+padding: 1rem 5%;
+display: flex;
+justify-content: space-between;
+align-items: center;
+box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.logo {
+font-family: var(--fonte-titulo);
+font-size: 1.8rem;
+font-weight: bold;
+}
+.logo span { color: #7FB069; }
+.btn-voltar {
+background-color: var(--cor-creme-medio);
+color: var(--cor-texto-escuro);
+padding: 0.6rem 1.5rem;
+border-radius: 25px;
+font-weight: bold;
+border: none;
+cursor: pointer;
+}
+.cadastro-container {
+flex: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 3rem 5%;
+}
+.cadastro-card {
+background: var(--cor-branco);
+border-radius: 20px;
+box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+max-width: 550px;
+width: 100%;
+padding: 3rem;
+}
+.cadastro-header {
+text-align: center;
+margin-bottom: 2rem;
+}
+.cadastro-header h1 {
+font-family: var(--fonte-titulo);
+font-size: 2rem;
+margin-bottom: 0.5rem;
+}
+.cadastro-header p {
+color: var(--cor-texto-cinza);
+}
+.form-group {
+margin-bottom: 1.5rem;
+position: relative;
+}
+.form-group label {
+display: block;
+margin-bottom: 0.5rem;
+font-weight: 500;
+}
+.form-group input, .form-group select {
+width: 100%;
+padding: 1rem 1.2rem;
+border: 2px solid var(--cor-creme-medio);
+border-radius: 12px;
+font-size: 1rem;
+outline: none;
+transition: border 0.3s;
+}
+.form-group input:focus, .form-group select:focus {
+border-color: var(--cor-verde-claro);
+}
+.form-group input.error, .form-group select.error {
+border-color: var(--cor-erro);
+}
+.form-group input.success {
+border-color: var(--cor-sucesso);
+}
+.error-message {
+color: var(--cor-erro);
+font-size: 0.8rem;
+margin-top: 0.3rem;
+display: none;
+}
+.password-toggle {
+position: absolute;
+right: 1rem;
+top: 2.4rem;
+cursor: pointer;
+background: none;
+border: none;
+font-size: 1.2rem;
+}
+.checkbox-group {
+display: flex;
+align-items: flex-start;
+gap: 0.8rem;
+margin-bottom: 1.5rem;
+}
+.checkbox-group input[type="checkbox"] {
+width: 20px;
+height: 20px;
+accent-color: var(--cor-verde-claro);
+}
+.checkbox-group label {
+font-size: 0.9rem;
+color: var(--cor-texto-cinza);
+}
+.checkbox-group a {
+color: var(--cor-verde-claro);
+}
+.btn-cadastrar {
+width: 100%;
+padding: 1.2rem;
+background-color: var(--cor-verde-claro);
+color: var(--cor-texto-escuro);
+border: none;
+border-radius: 12px;
+font-size: 1.1rem;
+font-weight: bold;
+cursor: pointer;
+transition: background 0.3s;
+}
+.btn-cadastrar:hover {
+background-color: var(--cor-verde-hover);
+}
+.btn-cadastrar:disabled {
+background-color: #ccc;
+cursor: not-allowed;
+}
+.login-link {
+text-align: center;
+margin-top: 1.5rem;
+color: var(--cor-texto-cinza);
+}
+.login-link a {
+color: var(--cor-verde-claro);
+font-weight: bold;
+}
+.alert {
+padding: 1rem;
+border-radius: 10px;
+margin-bottom: 1rem;
+display: none;
+}
+.alert-error { background-color: #FDE8E8; color: var(--cor-erro); }
+.alert-success { background-color: #E8F8F0; color: var(--cor-sucesso); }
+</style>
+</head>
+<body>
+<header>
+<div class="logo">Beauty<span>Link</span></div>
+<button class="btn-voltar" onclick="window.location.href='index.html'">← Voltar</button>
+</header>
+
+<div class="cadastro-container">
+<div class="cadastro-card">
+<div class="cadastro-header">
+<h1>Crie sua conta</h1>
+<p>Junte-se ao BeautyLink</p>
+</div>
+
+<div id="alertBox" class="alert"></div>
+
+<form id="cadastroForm" onsubmit="realizarCadastro(event)">
+<div class="form-group">
+<label for="nome">Nome Completo *</label>
+<input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required>
+<span class="error-message">Nome deve ter pelo menos 3 caracteres</span>
+</div>
+
+<div class="form-group">
+<label for="email">Email *</label>
+<input type="email" id="email" name="email" placeholder="seu@email.com" required>
+<span class="error-message">Email inválido</span>
+</div>
+
+<div class="form-group">
+<label for="telefone">Telefone/WhatsApp *</label>
+<input type="tel" id="telefone" name="telefone" placeholder="(11) 99999-9999" maxlength="15" required>
+<span class="error-message">Telefone inválido</span>
+</div>
+
+<div class="form-group">
+<label for="senha">Senha *</label>
+<input type="password" id="senha" name="senha" placeholder="Mínimo 8 caracteres" minlength="8" required>
+<button type="button" class="password-toggle" onclick="toggleSenha('senha')">👁️</button>
+<span class="error-message">Senha deve ter no mínimo 8 caracteres</span>
+</div>
+
+<div class="form-group">
+<label for="confirmarSenha">Confirmar Senha *</label>
+<input type="password" id="confirmarSenha" name="confirmarSenha" placeholder="Repita sua senha" required>
+<button type="button" class="password-toggle" onclick="toggleSenha('confirmarSenha')">👁️</button>
+<span class="error-message">As senhas não coincidem</span>
+</div>
+
+<div class="form-group">
+<label for="tipoConta">Tipo de Conta *</label>
+<select id="tipoConta" name="tipoConta" required>
+<option value="">Selecione...</option>
+<option value="cliente">Cliente</option>
+<option value="profissional">Profissional/Estabelecimento</option>
+</select>
+<span class="error-message">Selecione o tipo de conta</span>
+</div>
+
+<div class="checkbox-group">
+<input type="checkbox" id="termos" name="termos" required>
+<label for="termos">
+Li e aceito os <a href="#">Termos de Uso</a> e <a href="#">Política de Privacidade</a> *
+</label>
+</div>
+
+<button type="submit" class="btn-cadastrar" id="btnCadastrar">
+<span class="btn-text">Criar Conta</span>
+</button>
+
+<div class="login-link">
+Já tem uma conta? <a href="login.html">Faça login</a>
+</div>
+</form>
+</div>
+</div>
+
+<script>
+const API_URL = 'http://localhost:3000/api';
+
+// Máscara de telefone
+document.getElementById('telefone').addEventListener('input', function(e) {
+let value = e.target.value.replace(/\D/g, '');
+if (value.length > 11) value = value.slice(0, 11);
+if (value.length > 10) {
+value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+} else if (value.length > 5) {
+value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+} else if (value.length > 2) {
+value = value.replace(/^(\d{2})(\d{0,5}).*/, '($1) $2');
+}
+e.target.value = value;
+});
+
+function toggleSenha(id) {
+const input = document.getElementById(id);
+input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function validarEmail(email) {
+return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validarTelefone(telefone) {
+return telefone.replace(/\D/g, '').length === 11;
+}
+
+async function realizarCadastro(event) {
+event.preventDefault();
+
+const nome = document.getElementById('nome').value;
+const email = document.getElementById('email').value;
+const telefone = document.getElementById('telefone').value;
+const senha = document.getElementById('senha').value;
+const confirmarSenha = document.getElementById('confirmarSenha').value;
+const tipoConta = document.getElementById('tipoConta').value;
+const termos = document.getElementById('termos').checked;
+
+const alertBox = document.getElementById('alertBox');
+const btn = document.getElementById('btnCadastrar');
+
+// Validações
+if (nome.trim().length < 3) {
+alertBox.className = 'alert alert-error';
+alertBox.textContent = 'Nome deve ter pelo menos 3 caracteres';
+alertBox.style.display = 'block';
+return;
+}
+
+if (!validarEmail(email)) {
+alertBox.className = 'alert alert-error';
+alertBox.textContent = 'Email inválido';
+alertBox.style.display = 'block';
+return;
+}
+
+if (!validarTelefone(telefone)) {
+alertBox.className = 'alert alert-error';
+alertBox.textContent = 'Telefone inválido';
+alertBox.style.display = 'block';
+return;
+}
+
+if (senha.length < 8) {
+alertBox.className = 'alert alert-error';
+alertBox.textContent = 'Senha deve ter no mínimo 8 caracteres';
+alertBox.style.display = 'block';
+return;
+}
+
+if (senha !== confirmarSenha) {
+alertBox.className = 'alert alert-error';
+alertBox.textContent = 'As senhas não coincidem';
+alertBox.style.display = 'block';
+return;
+}
+
+if (!termos) {
+alertBox.className = 'alert alert-error';
+alertBox.textContent = 'Você deve aceitar os termos de uso';
+alertBox.style.display = 'block';
+return;
+}
+
+btn.disabled = true;
+btn.querySelector('.btn-text').textContent = 'Cadastrando...';
+
+try {
+const response = await fetch(`${API_URL}/auth/cadastro`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+nome,
+email,
+telefone,
+senha,
+tipoConta,
+termos
+})
+});
+
+const data = await response.json();
+
+if (response.ok) {
+alertBox.className = 'alert alert-success';
+alertBox.textContent = 'Cadastro realizado com sucesso! Redirecionando...';
+alertBox.style.display = 'block';
+
+// Salvar token e usuário
+localStorage.setItem('token', data.token);
+localStorage.setItem('user', JSON.stringify(data.user));
+
+setTimeout(() => {
+window.location.href = 'perfil.html';
+}, 1500);
+} else {
+throw new Error(data.message || 'Erro no cadastro');
+}
+} catch (error) {
+alertBox.className = 'alert alert-error';
+alertBox.textContent = error.message;
+alertBox.style.display = 'block';
+btn.disabled = false;
+btn.querySelector('.btn-text').textContent = 'Criar Conta';
+}
+}
+</script>
+</body>
+</html>
