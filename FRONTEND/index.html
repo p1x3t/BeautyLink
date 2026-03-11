@@ -7,7 +7,7 @@
     <title>BeautyLink</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* ====== VARIÁVEIS MINIMALISTAS ====== */
+        /* ====== VARIÁVEIS ====== */
         :root {
             --bg: #FDFBF7;
             --surface: #FFFFFF;
@@ -19,6 +19,7 @@
             --border: #E8E4D9;
             --success: #27AE60;
             --error: #E74C3C;
+            --warning: #F59E0B;
             --shadow: 0 2px 12px rgba(62, 74, 61, 0.08);
             --radius: 16px;
             --radius-sm: 12px;
@@ -364,6 +365,7 @@
             padding: 1.25rem;
             transition: all 0.2s;
             cursor: pointer;
+            position: relative;
         }
 
         .establishment-card:hover,
@@ -975,6 +977,90 @@
             flex: 1;
         }
 
+        /* ====== AUTH MODAL ====== */
+        .auth-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 1rem;
+            background: var(--surface-alt);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+        }
+
+        .auth-tab.active {
+            background: var(--primary);
+            color: var(--text);
+        }
+
+        .senha-forca .forca-barra {
+            transition: background 0.3s;
+            height: 4px;
+            border-radius: 2px;
+            flex: 1;
+        }
+
+        .senha-forca .forca-barra.fraca {
+            background: var(--error);
+        }
+
+        .senha-forca .forca-barra.media {
+            background: var(--warning);
+        }
+
+        .senha-forca .forca-barra.forte {
+            background: var(--success);
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .auth-divider div {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .auth-divider span {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .social-btn {
+            width: 100%;
+            padding: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .social-btn.google {
+            background: var(--surface);
+            border: 2px solid var(--border);
+        }
+
+        .social-btn.apple {
+            background: #000;
+            color: white;
+            border: 2px solid #000;
+        }
+
         /* ====== FEATURES ====== */
         .features {
             background: var(--surface);
@@ -1290,8 +1376,10 @@
                 <a href="#feed">Inspirações</a>
             </nav>
             <div class="nav-actions">
-                <button class="btn btn-outline btn-sm" onclick="abrirPerfil()">👤 Minha Conta</button>
-                <button class="btn btn-outline btn-sm" onclick="window.open('https://forms.gle/Evf3ChA1NVWXBCnc9', '_blank')">📝 Responda nossa pesquisa</button>
+                <button class="btn btn-outline btn-sm" onclick="abrirAuth()">👤 Entrar</button>
+                <button class="btn btn-outline btn-sm"
+                    onclick="window.open('https://forms.gle/Evf3ChA1NVWXBCnc9', '_blank')">📝 Responda nossa
+                    pesquisa</button>
                 <button class="btn btn-primary btn-sm" onclick="scrollToAgendamento()">Agendar</button>
             </div>
         </div>
@@ -1304,7 +1392,7 @@
             <p>Descubra profissionais de estética próximos, veja resultados reais e agende em segundos.</p>
             <div class="hero-cta">
                 <button class="btn btn-primary" onclick="scrollToAgendamento()">Encontrar profissionais</button>
-                <button class="btn btn-outline" onclick="abrirPerfil()">Sou profissional</button>
+                <button class="btn btn-outline" onclick="abrirAuth()">Sou profissional</button>
             </div>
         </div>
         <div class="hero-image">
@@ -1392,6 +1480,160 @@
                 </div>
                 <button class="btn btn-primary" onclick="fecharAgenda(); novoAgendamento();">Fechar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL AUTENTICAÇÃO -->
+    <div id="modalAuth" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalAuthTitle">
+        <div class="modal-content" style="max-width: 450px;">
+            <button class="modal-close" onclick="fecharAuth()" aria-label="Fechar">&times;</button>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="mudarTabAuth('login')" id="tabLogin">Entrar</button>
+                <button class="auth-tab" onclick="mudarTabAuth('registro')" id="tabRegistro">Cadastrar</button>
+            </div>
+
+            <div id="alertAuth" class="alert"></div>
+
+            <!-- Login Form -->
+            <form id="formLogin" onsubmit="fazerLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required placeholder="seu@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="loginSenha">Senha</label>
+                    <div style="position: relative;">
+                        <input type="password" id="loginSenha" required placeholder="••••••••"
+                            style="width: 100%; padding-right: 3rem;">
+                        <button type="button" onclick="toggleSenha('loginSenha', this)"
+                            style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted);">👁️</button>
+                    </div>
+                    <a href="#" onclick="recuperarSenha()"
+                        style="font-size: 0.85rem; color: var(--primary-hover); display: inline-block; margin-top: 0.5rem;">Esqueceu
+                        a senha?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary"
+                    style="width: 100%; padding: 1rem; margin-top: 1rem;">Entrar</button>
+            </form>
+
+            <!-- Registro Form -->
+            <form id="formRegistro" class="hidden" onsubmit="fazerRegistro(event)">
+                <div class="form-group">
+                    <label for="registroNome">Nome completo <span class="required">*</span></label>
+                    <input type="text" id="registroNome" required placeholder="Maria Silva" minlength="3">
+                </div>
+
+                <div class="form-group">
+                    <label for="registroEmail">Email <span class="required">*</span></label>
+                    <input type="email" id="registroEmail" required placeholder="seu@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="registroTelefone">Telefone/WhatsApp <span class="required">*</span></label>
+                    <input type="tel" id="registroTelefone" required placeholder="(11) 99999-9999" maxlength="15">
+                </div>
+
+                <div class="form-group">
+                    <label for="registroSenha">Senha <span class="required">*</span></label>
+                    <div style="position: relative;">
+                        <input type="password" id="registroSenha" required placeholder="Mínimo 6 caracteres"
+                            minlength="6" style="width: 100%; padding-right: 3rem;">
+                        <button type="button" onclick="toggleSenha('registroSenha', this)"
+                            style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted);">👁️</button>
+                    </div>
+                    <div class="senha-forca" style="margin-top: 0.5rem;">
+                        <div style="display: flex; gap: 4px; margin-bottom: 0.25rem;">
+                            <div class="forca-barra"></div>
+                            <div class="forca-barra"></div>
+                            <div class="forca-barra"></div>
+                            <div class="forca-barra"></div>
+                        </div>
+                        <span class="forca-texto" style="font-size: 0.75rem; color: var(--text-muted);">Força da
+                            senha</span>
+                    </div>
+                </div>
+
+                <div class="checkbox-group" style="margin: 1rem 0;">
+                    <label class="checkbox-custom">
+                        <input type="checkbox" id="registroTermos" required>
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="checkbox-label" for="registroTermos">
+                        Aceito os <a href="#">Termos de Uso</a> e <a href="#">Política de Privacidade</a> <span
+                            class="required">*</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem;">Criar conta</button>
+            </form>
+
+            <!-- Divider -->
+            <div class="auth-divider">
+                <div></div>
+                <span>ou continue com</span>
+                <div></div>
+            </div>
+
+            <!-- Social Login -->
+            <div>
+                <button onclick="loginGoogle()" class="btn social-btn google">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285F4"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                        <path fill="#EA4335"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                    </svg>
+                    Continuar com Google
+                </button>
+
+                <button onclick="loginApple()" class="btn social-btn apple">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                        <path
+                            d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+                    </svg>
+                    Continuar com Apple
+                </button>
+            </div>
+
+            <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+                Ao continuar, você concorda com nossos Termos de Uso e Política de Privacidade.
+            </p>
+        </div>
+    </div>
+
+    <!-- MODAL RECUPERAÇÃO DE SENHA -->
+    <div id="modalRecuperacao" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="max-width: 450px;">
+            <button class="modal-close" onclick="fecharRecuperacao()" aria-label="Fechar">&times;</button>
+
+            <div class="text-center" style="margin-bottom: 1.5rem;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">🔐</div>
+                <h2 style="font-family: var(--font-title); margin-bottom: 0.5rem;">Recuperar senha</h2>
+                <p style="color: var(--text-muted);">Digite seu email e enviaremos instruções para redefinir sua senha.
+                </p>
+            </div>
+
+            <div id="alertRecuperacao" class="alert"></div>
+
+            <form onsubmit="enviarRecuperacao(event)">
+                <div class="form-group">
+                    <label for="recuperacaoEmail">Email cadastrado</label>
+                    <input type="email" id="recuperacaoEmail" required placeholder="seu@email.com">
+                </div>
+
+                <button type="submit" class="btn btn-primary"
+                    style="width: 100%; padding: 1rem; margin-top: 1rem;">Enviar instruções</button>
+            </form>
+
+            <button onclick="fecharRecuperacao(); abrirAuth();" class="btn btn-outline"
+                style="width: 100%; padding: 0.875rem; margin-top: 1rem;">← Voltar para login</button>
         </div>
     </div>
 
@@ -1583,13 +1825,329 @@
         let estabSelecionado = null;
         let servicoSel = null, dataSel = null, horaSel = null;
         let fotosServicos = [];
+        let usuarioAtual = null;
 
         // ====== INICIALIZAÇÃO ======
         window.addEventListener('load', () => {
             initMap();
             setupMascaras();
             carregarPerfilMock();
+            verificarUsuario();
         });
+
+        // ====== SISTEMA DE AUTENTICAÇÃO ======
+        function abrirAuth() {
+            document.getElementById('modalAuth').classList.add('open');
+            document.getElementById('alertAuth').classList.remove('show');
+            mudarTabAuth('login');
+        }
+
+        function fecharAuth() {
+            document.getElementById('modalAuth').classList.remove('open');
+        }
+
+        function mudarTabAuth(tab) {
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegistro = document.getElementById('tabRegistro');
+            const formLogin = document.getElementById('formLogin');
+            const formRegistro = document.getElementById('formRegistro');
+
+            if (tab === 'login') {
+                tabLogin.classList.add('active');
+                tabRegistro.classList.remove('active');
+                formLogin.classList.remove('hidden');
+                formRegistro.classList.add('hidden');
+            } else {
+                tabRegistro.classList.add('active');
+                tabLogin.classList.remove('active');
+                formRegistro.classList.remove('hidden');
+                formLogin.classList.add('hidden');
+            }
+
+            document.getElementById('alertAuth').classList.remove('show');
+        }
+
+        function toggleSenha(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+            }
+        }
+
+        // Força da senha
+        document.addEventListener('DOMContentLoaded', () => {
+            const senhaInput = document.getElementById('registroSenha');
+            if (senhaInput) {
+                senhaInput.addEventListener('input', function (e) {
+                    const senha = e.target.value;
+                    const barras = document.querySelectorAll('.forca-barra');
+                    const texto = document.querySelector('.forca-texto');
+
+                    let forca = 0;
+                    if (senha.length >= 6) forca++;
+                    if (senha.length >= 10) forca++;
+                    if (/[A-Z]/.test(senha) && /[a-z]/.test(senha)) forca++;
+                    if (/[0-9]/.test(senha) || /[^A-Za-z0-9]/.test(senha)) forca++;
+
+                    barras.forEach((barra, i) => {
+                        barra.className = 'forca-barra';
+                        if (i < forca) {
+                            if (forca <= 2) barra.classList.add('fraca');
+                            else if (forca === 3) barra.classList.add('media');
+                            else barra.classList.add('forte');
+                        }
+                    });
+
+                    const textos = ['Muito fraca', 'Fraca', 'Média', 'Forte', 'Muito forte'];
+                    texto.textContent = senha ? textos[forca] : 'Força da senha';
+                });
+            }
+        });
+
+        // Máscara telefone registro
+        document.addEventListener('DOMContentLoaded', () => {
+            const telInput = document.getElementById('registroTelefone');
+            if (telInput) {
+                telInput.addEventListener('input', function (e) {
+                    let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+                    if (v.length > 10) v = v.replace(/^(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                    else if (v.length > 5) v = v.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+                    else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+                    e.target.value = v;
+                });
+            }
+        });
+
+        // Login
+        async function fazerLogin(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('loginEmail').value;
+            const senha = document.getElementById('loginSenha').value;
+            const btn = e.target.querySelector('button[type="submit"]');
+
+            btn.disabled = true;
+            btn.textContent = 'Entrando...';
+
+            setTimeout(() => {
+                const usuarios = JSON.parse(localStorage.getItem('usuariosBeautyLink') || '[]');
+                const usuario = usuarios.find(u => u.email === email && u.senha === senha);
+
+                if (usuario || (email === 'admin@beautylink.com' && senha === '123456')) {
+                    const userLogado = usuario || { email, nome: 'Admin' };
+                    localStorage.setItem('usuarioBeautyLink', JSON.stringify(userLogado));
+                    usuarioAtual = userLogado;
+
+                    fecharAuth();
+                    atualizarHeaderUsuario();
+                    mostrarAlerta('alertAuth', 'Login realizado com sucesso! Bem-vindo(a)! ✨', 'success');
+
+                    if (usuario?.tipo === 'profissional') {
+                        setTimeout(() => abrirPerfil(), 500);
+                    }
+                } else {
+                    mostrarAlerta('alertAuth', 'Email ou senha incorretos.', 'error');
+                }
+
+                btn.disabled = false;
+                btn.textContent = 'Entrar';
+            }, 1000);
+        }
+
+        // Registro
+        async function fazerRegistro(e) {
+            e.preventDefault();
+
+            const dados = {
+                nome: document.getElementById('registroNome').value,
+                email: document.getElementById('registroEmail').value,
+                telefone: document.getElementById('registroTelefone').value,
+                senha: document.getElementById('registroSenha').value,
+                tipo: 'cliente',
+                dataCadastro: new Date().toISOString()
+            };
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Criando conta...';
+
+            setTimeout(() => {
+                const usuarios = JSON.parse(localStorage.getItem('usuariosBeautyLink') || '[]');
+
+                if (usuarios.find(u => u.email === dados.email)) {
+                    mostrarAlerta('alertAuth', 'Este email já está cadastrado.', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Criar conta';
+                    return;
+                }
+
+                usuarios.push(dados);
+                localStorage.setItem('usuariosBeautyLink', JSON.stringify(usuarios));
+                localStorage.setItem('usuarioBeautyLink', JSON.stringify(dados));
+                usuarioAtual = dados;
+
+                fecharAuth();
+                atualizarHeaderUsuario();
+                mostrarAlerta('alertAuth', 'Conta criada com sucesso! Bem-vindo(a)! 🎉', 'success');
+
+                btn.disabled = false;
+                btn.textContent = 'Criar conta';
+            }, 1500);
+        }
+
+        // Login Google
+        function loginGoogle() {
+            const btn = event.currentTarget;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></div>';
+
+            setTimeout(() => {
+                const usuarioGoogle = {
+                    nome: 'Usuário Google',
+                    email: 'usuario@gmail.com',
+                    telefone: '',
+                    tipo: 'cliente',
+                    provider: 'google'
+                };
+
+                localStorage.setItem('usuarioBeautyLink', JSON.stringify(usuarioGoogle));
+                usuarioAtual = usuarioGoogle;
+
+                fecharAuth();
+                atualizarHeaderUsuario();
+                mostrarAlerta('alertAuth', 'Login com Google realizado! ✨', 'success');
+
+                btn.disabled = false;
+                btn.innerHTML = `
+<svg width="20" height="20" viewBox="0 0 24 24">
+<path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+<path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+<path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+<path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+</svg>
+Continuar com Google
+`;
+            }, 1500);
+        }
+
+        // Login Apple
+        function loginApple() {
+            const btn = event.currentTarget;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; border-width: 2px; border-top-color: white;"></div>';
+
+            setTimeout(() => {
+                const usuarioApple = {
+                    nome: 'Usuário Apple',
+                    email: 'usuario@icloud.com',
+                    telefone: '',
+                    tipo: 'cliente',
+                    provider: 'apple'
+                };
+
+                localStorage.setItem('usuarioBeautyLink', JSON.stringify(usuarioApple));
+                usuarioAtual = usuarioApple;
+
+                fecharAuth();
+                atualizarHeaderUsuario();
+                mostrarAlerta('alertAuth', 'Login com Apple realizado! ✨', 'success');
+
+                btn.disabled = false;
+                btn.innerHTML = `
+<svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+<path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+</svg>
+Continuar com Apple
+`;
+            }, 1500);
+        }
+
+        // Recuperação de senha
+        function recuperarSenha() {
+            fecharAuth();
+            document.getElementById('modalRecuperacao').classList.add('open');
+        }
+
+        function fecharRecuperacao() {
+            document.getElementById('modalRecuperacao').classList.remove('open');
+        }
+
+        async function enviarRecuperacao(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('recuperacaoEmail').value;
+            const btn = e.target.querySelector('button[type="submit"]');
+
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+
+            setTimeout(() => {
+                mostrarAlerta('alertRecuperacao', `Email de recuperação enviado para ${email}! Verifique sua caixa de entrada. 📧`, 'success');
+
+                btn.disabled = false;
+                btn.textContent = 'Enviar instruções';
+
+                setTimeout(() => {
+                    fecharRecuperacao();
+                    abrirAuth();
+                }, 3000);
+            }, 1500);
+        }
+
+        function mostrarAlerta(id, msg, tipo = 'info') {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            el.textContent = msg;
+            el.className = `alert alert-${tipo} show`;
+
+            if (tipo !== 'error') {
+                setTimeout(() => el.classList.remove('show'), 5000);
+            }
+        }
+
+        // Atualizar header com usuário logado
+        function atualizarHeaderUsuario() {
+            const usuario = JSON.parse(localStorage.getItem('usuarioBeautyLink') || 'null');
+            const navActions = document.querySelector('.nav-actions');
+
+            if (usuario) {
+                const inicial = usuario.nome?.charAt(0).toUpperCase() || 'U';
+                navActions.innerHTML = `
+<button class="btn btn-avatar" onclick="abrirPerfil()" title="${usuario.nome || 'Perfil'}">${inicial}</button>
+<button class="btn btn-outline btn-sm" onclick="logout()">Sair</button>
+`;
+            } else {
+                navActions.innerHTML = `
+<button class="btn btn-outline btn-sm" onclick="abrirAuth()">👤 Entrar</button>
+<button class="btn btn-outline btn-sm" onclick="window.open('https://forms.gle/Evf3ChA1NVWXBCnc9', '_blank')">📝 Responda nossa pesquisa</button>
+<button class="btn btn-primary btn-sm" onclick="scrollToAgendamento()">Agendar</button>
+`;
+            }
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Deseja realmente sair da conta?')) {
+                localStorage.removeItem('usuarioBeautyLink');
+                usuarioAtual = null;
+                atualizarHeaderUsuario();
+                mostrarAlerta('alertAuth', 'Você saiu da conta.', 'info');
+            }
+        }
+
+        // Verificar usuário ao carregar
+        function verificarUsuario() {
+            const usuario = JSON.parse(localStorage.getItem('usuarioBeautyLink') || 'null');
+            if (usuario) {
+                usuarioAtual = usuario;
+            }
+            atualizarHeaderUsuario();
+        }
 
         // ====== MAPA PRINCIPAL ======
         function initMap() {
@@ -1650,11 +2208,6 @@
             return t;
         }
         function formatarData(s) { const [a, m, d] = s.split('-'); return `${d}/${m}/${a}`; }
-        function mostrarAlerta(id, msg, tipo = 'info') {
-            const el = document.getElementById(id);
-            el.textContent = msg; el.className = `alert alert-${tipo} show`;
-            if (tipo !== 'error') setTimeout(() => el.classList.remove('show'), 4000);
-        }
 
         // ====== BUSCA ======
         async function buscarCEP(cep) {
@@ -1668,7 +2221,6 @@
                 throw new Error('Geocodificação falhou');
             } catch (e) { console.error(e); alert('CEP não encontrado'); return null; }
         }
-
         async function buscarEstabelecimentos() {
             const cep = document.getElementById('cepInput').value;
             const servico = document.getElementById('servicoSelect').value;
@@ -1678,7 +2230,6 @@
             document.getElementById('loadingBusca').classList.add('hidden');
             if (loc) { userLocation = { lat: loc.lat, lng: loc.lng }; atualizarMapa(loc.lat, loc.lng, servico); }
         }
-
         function usarLocalizacaoAtual() {
             if (!navigator.geolocation) { alert('Geolocalização não suportada'); return; }
             document.getElementById('loadingBusca').classList.remove('hidden');
@@ -1693,7 +2244,6 @@
                 document.getElementById('loadingBusca').classList.add('hidden');
             }, () => { alert('Não foi possível obter sua localização'); document.getElementById('loadingBusca').classList.add('hidden'); });
         }
-
         function atualizarMapa(lat, lng, filtroServico) {
             markers.forEach(m => map.removeLayer(m)); markers = [];
             const comDist = estabelecimentos.map(e => ({ ...e, distancia: +calcularDistancia(lat, lng, e.lat, e.lng) }));
@@ -1708,7 +2258,6 @@
             });
             renderizarLista(filtrados);
         }
-
         function renderizarLista(lista) {
             const c = document.getElementById('listaEstabelecimentos'); c.innerHTML = '';
             if (!lista.length) { c.innerHTML = '<div class="loading"><p>Nenhum estabelecimento encontrado.</p></div>'; return; }
@@ -1731,7 +2280,6 @@ ${i === 0 ? '<span style="position:absolute;top:-8px;right:10px;background:#FF6B
                 c.appendChild(card);
             });
         }
-
         function destacarCard(id) {
             document.querySelectorAll('.establishment-card').forEach(c => c.classList.remove('active'));
             const c = document.getElementById(`card-${id}`); if (c) { c.classList.add('active'); c.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
@@ -1805,12 +2353,18 @@ ${!indisponiveis.includes(h) ? `onclick="selecionarHorario('${h}')"` : ''}>${h}$
 
         // ====== PERFIL ======
         function abrirPerfil() {
+            const usuario = JSON.parse(localStorage.getItem('usuarioBeautyLink') || 'null');
+
+            if (!usuario) {
+                abrirAuth();
+                return;
+            }
+
             initProfileMap();
             document.getElementById('modalPerfil').classList.add('open');
         }
         function fecharPerfil() { document.getElementById('modalPerfil').classList.remove('open'); }
 
-        // Mock de dados do perfil (substituir por API real)
         function carregarPerfilMock() {
             const mock = { nome: "Maria Silva", email: "maria@exemplo.com", telefone: "5511999999999", nomeLoja: "Studio Maria", descricao: "Especialista em cuidados faciais e bem-estar.", latitude: -23.5615, longitude: -46.6720 };
             document.getElementById('profileNameDisplay').textContent = mock.nome;
@@ -1824,7 +2378,6 @@ ${!indisponiveis.includes(h) ? `onclick="selecionarHorario('${h}')"` : ''}>${h}$
                 if (profileMap) profileMap.setView([mock.latitude, mock.longitude], 15);
             }
         }
-
         function previewFotoPerfil(e) {
             const file = e.target.files[0]; if (!file) return;
             if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) { mostrarAlerta('alertPerfil', 'Selecione uma imagem válida (máx. 5MB)', 'error'); return; }
@@ -1832,7 +2385,6 @@ ${!indisponiveis.includes(h) ? `onclick="selecionarHorario('${h}')"` : ''}>${h}$
             reader.onload = ev => { document.getElementById('profileAvatar').src = ev.target.result; };
             reader.readAsDataURL(file);
         }
-
         function previewFotosServicos(e) {
             const files = Array.from(e.target.files);
             files.forEach(file => {
@@ -1845,7 +2397,6 @@ ${!indisponiveis.includes(h) ? `onclick="selecionarHorario('${h}')"` : ''}>${h}$
                 reader.readAsDataURL(file);
             });
         }
-
         function renderizarFotosPreview() {
             const c = document.getElementById('photosPreview'); c.innerHTML = '';
             fotosServicos.forEach((src, i) => {
@@ -1855,7 +2406,6 @@ ${!indisponiveis.includes(h) ? `onclick="selecionarHorario('${h}')"` : ''}>${h}$
             });
         }
         function removerFoto(i) { fotosServicos.splice(i, 1); renderizarFotosPreview(); }
-
         function definirLocalizacaoAtual() {
             if (!navigator.geolocation) { alert('Geolocalização não suportada'); return; }
             navigator.geolocation.getCurrentPosition(pos => {
@@ -1865,7 +2415,6 @@ ${!indisponiveis.includes(h) ? `onclick="selecionarHorario('${h}')"` : ''}>${h}$
                 if (profileMap) { profileMap.setView([latitude, longitude], 15); profileMap.eachLayer(l => { if (l instanceof L.Marker) l.setLatLng([latitude, longitude]); }); }
             }, () => alert('Não foi possível obter sua localização'));
         }
-
         async function salvarPerfil(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSalvarPerfil');
@@ -1881,7 +2430,6 @@ ${!indisponiveis.includes(h) ? `onclick="selecionarHorario('${h}')"` : ''}>${h}$
                 longitude: document.getElementById('profileLng').value,
                 termos: document.getElementById('profileTermos').checked
             };
-            // SIMULAÇÃO DE API
             setTimeout(() => {
                 localStorage.setItem('perfilBeautyLink', JSON.stringify(dados));
                 mostrarAlerta('alertPerfil', 'Perfil atualizado com sucesso! ✨', 'success');
